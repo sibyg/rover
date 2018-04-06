@@ -1,7 +1,7 @@
 package com.siby.assignments.db.rover;
 
 
-public enum CommandN {
+public enum Command {
 
     FORWARD('F'),
     BACKWARD('B'),
@@ -10,7 +10,7 @@ public enum CommandN {
 
     private char shortName;
 
-    CommandN(char shortNameValue) {
+    Command(char shortNameValue) {
         shortName = shortNameValue;
     }
 

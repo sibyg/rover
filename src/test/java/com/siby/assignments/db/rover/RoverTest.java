@@ -1,121 +1,566 @@
 package com.siby.assignments.db.rover;
 
-
-import static java.util.Collections.singletonList;
+import static com.siby.assignments.db.rover.Command.FORWARD;
+import static com.siby.assignments.db.rover.Command.LEFT;
+import static com.siby.assignments.db.rover.Direction.NORTH;
+import static com.siby.assignments.db.rover.Direction.SOUTH;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-import org.junit.Before;
 import org.junit.Test;
 
-/*
-Develop an api that moves a rover around on a grid.
-* You are given the initial starting point (x,y) of a rover and the direction (N,S,E,W) it is facing.
-* - The rover receives a character array of commands.
-* - Implement commands that move the rover forward/backward (f,b).
-* - Implement commands that turn the rover left/right (l,r).
-* - Implement wrapping from one edge of the grid to another. (planets are spheres after all)
-* - Implement obstacle detection before each move to a new square.
-*   If a given sequence of commands encounters an obstacle, the rover moves up to the last possible point and reports the obstacle.
-*/
+
 public class RoverTest {
 
-    private final Direction direction = Direction.NORTH;
-    private Rover rover;
-    private Coordinates roverCoordinates;
-    private Point x;
-    private Point y;
+    @Test
+    public void shouldSetStartingLocation() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
 
-    @Before
-    public void beforeRoverTest() {
-        x = new Point(1, 9);
-        y = new Point(2, 9);
-        List<Obstacle> obstacles = new ArrayList<Obstacle>();
-        roverCoordinates = new Coordinates(x, y, direction, obstacles);
-        rover = new Rover(roverCoordinates);
+        // when
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .build();
+
+        // then
+        assertThat(rover.getLocation()).isEqualTo(location);
     }
 
     @Test
-    public void newInstanceShouldSetRoverCoordinatesAndDirection() {
-        assertThat(rover.getCoordinates()).isEqualToComparingFieldByField(roverCoordinates);
+    public void shouldSetDefaultStartingLocation() {
+        // when
+        Rover rover = new Rover.Builder()
+                .build();
+
+        // then
+        assertThat(rover.getLocation()).isEqualTo(Coordinate.instance(0, 0));
     }
 
     @Test
-    public void receiveSingleCommandShouldMoveForwardWhenCommandIsF() throws Exception {
-        int expected = y.getLocation() + 1;
-        rover.receiveSingleCommand('F');
-        assertThat(rover.getCoordinates().getY().getLocation()).isEqualTo(expected);
+    public void shouldSetFace() {
+        // given
+        Direction face = Direction.EAST;
+
+        // when
+        Rover rover = new Rover.Builder()
+                .face(face)
+                .build();
+
+        // then
+        assertThat(rover.getFace()).isEqualTo(face);
     }
 
     @Test
-    public void receiveSingleCommandShouldMoveBackwardWhenCommandIsB() throws Exception {
-        int expected = y.getLocation() - 1;
-        rover.receiveSingleCommand('B');
-        assertThat(rover.getCoordinates().getY().getLocation()).isEqualTo(expected);
+    public void shouldSetDefaultFace() {
+        // when
+        Rover rover = new Rover.Builder()
+                .build();
+
+        // then
+        assertThat(rover.getFace()).isEqualTo(NORTH);
+    }
+
+
+    @Test
+    public void shouldIncreaseXWhenMovingForwardWhileFacingEast() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = Direction.EAST;
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .build();
+
+        // when
+        rover.move(FORWARD);
+
+        // then
+        assertThat(rover.getLocation()).isEqualTo(Coordinate.instance(11, 12));
     }
 
     @Test
-    public void receiveSingleCommandShouldTurnLeftWhenCommandIsL() throws Exception {
-        rover.receiveSingleCommand('L');
-        assertThat(rover.getCoordinates().getDirection()).isEqualTo(Direction.WEST);
+    public void shouldReduceXWhenMovingForwardWhileFacingWest() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = Direction.WEST;
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .build();
+
+        // when
+        rover.move(FORWARD);
+
+        // then
+        assertThat(rover.getLocation()).isEqualTo(Coordinate.instance(9, 12));
     }
 
     @Test
-    public void receiveSingleCommandShouldTurnRightWhenCommandIsR() throws Exception {
-        rover.receiveSingleCommand('R');
-        assertThat(rover.getCoordinates().getDirection()).isEqualTo(Direction.EAST);
+    public void shouldIncreaseYWhenMovingForwardWhileFacingNorth() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = NORTH;
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .build();
+
+        // when
+        rover.move(FORWARD);
+
+        // then
+        assertThat(rover.getLocation()).isEqualTo(Coordinate.instance(10, 13));
     }
 
     @Test
-    public void receiveSingleCommandShouldIgnoreCase() throws Exception {
-        rover.receiveSingleCommand('r');
-        assertThat(rover.getCoordinates().getDirection()).isEqualTo(Direction.EAST);
-    }
+    public void shouldReduceYWhenMovingForwardWhileFacingSouth() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = Direction.SOUTH;
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .build();
 
-    @Test(expected = Exception.class)
-    public void receiveSingleCommandShouldThrowExceptionWhenCommandIsUnknown() throws Exception {
-        rover.receiveSingleCommand('X');
-    }
+        // when
+        rover.move(FORWARD);
 
-    @Test
-    public void receiveCommandsShouldBeAbleToReceiveMultipleCommands() throws Exception {
-        int expected = x.getLocation() + 1;
-        rover.receiveCommands("RFR");
-        assertThat(rover.getCoordinates().getX().getLocation()).isEqualTo(expected);
-        assertThat(rover.getCoordinates().getDirection()).isEqualTo(Direction.SOUTH);
-    }
-
-    @Test
-    public void receiveCommandShouldWhatFromOneEdgeOfTheGridToAnother() throws Exception {
-        int expected = x.getMaxLocation() + x.getLocation() - 2;
-        rover.receiveCommands("LFFF");
-        assertThat(rover.getCoordinates().getX().getLocation()).isEqualTo(expected);
+        // then
+        assertThat(rover.getLocation()).isEqualTo(Coordinate.instance(10, 11));
     }
 
     @Test
-    public void receiveCommandsShouldStopWhenObstacleIsFound() throws Exception {
-        int expected = x.getLocation() + 1;
-        rover.getCoordinates().setObstacles(Arrays.asList(new Obstacle(expected + 1, y.getLocation())));
-        rover.getCoordinates().setDirection(Direction.EAST);
-        rover.receiveCommands("FFFRF");
-        assertThat(rover.getCoordinates().getX().getLocation()).isEqualTo(expected);
-        assertThat(rover.getCoordinates().getDirection()).isEqualTo(Direction.EAST);
+    public void shouldReduceXWhenMovingBackwardWhileFacingEast() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = Direction.EAST;
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .build();
+
+        // when
+        rover.move(Command.BACKWARD);
+
+        // then
+        assertThat(rover.getLocation()).isEqualTo(Coordinate.instance(9, 12));
     }
 
     @Test
-    public void positionShouldReturnXYAndDirection() throws Exception {
-        rover.receiveCommands("LFFFRFF");
-        assertThat(rover.getPosition()).isEqualTo("8 X 4 N");
+    public void shouldIncreaseXWhenMovingBackwardWhileFacingWest() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = Direction.WEST;
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .build();
+
+        // when
+        rover.move(Command.BACKWARD);
+
+        // then
+        assertThat(rover.getLocation()).isEqualTo(Coordinate.instance(11, 12));
     }
 
     @Test
-    public void positionShouldReturnNokWhenObstacleIsFound() throws Exception {
-        rover.getCoordinates().setObstacles(singletonList(new Obstacle(x.getLocation() + 1, y.getLocation())));
-        rover.getCoordinates().setDirection(Direction.EAST);
-        rover.receiveCommands("F");
-        assertThat(rover.getPosition()).endsWith(" NOK");
+    public void shouldDecreaseYWhenMovingBackwardWhileFacingNorth() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = NORTH;
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .build();
+
+        // when
+        rover.move(Command.BACKWARD);
+
+        // then
+        assertThat(rover.getLocation()).isEqualTo(Coordinate.instance(10, 11));
+    }
+
+    @Test
+    public void shouldIncreaseYWhenMovingBackwardWhileFacingSouth() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = Direction.SOUTH;
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .build();
+
+        // when
+        rover.move(Command.BACKWARD);
+
+        // then
+        assertThat(rover.getLocation()).isEqualTo(Coordinate.instance(10, 13));
+    }
+
+    @Test
+    public void shouldChangeFromEastToNorthOnLeftTurn() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = Direction.EAST;
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .build();
+
+        // when
+        rover.turn(LEFT);
+
+        // then
+        assertThat(rover.getFace()).isEqualTo(NORTH);
+    }
+
+    @Test
+    public void shouldChangeFromNorthToWestOnLeftTurn() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = NORTH;
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .build();
+
+        // when
+        rover.turn(LEFT);
+
+        // then
+        assertThat(rover.getFace()).isEqualTo(Direction.WEST);
+    }
+
+    @Test
+    public void shouldChangeFromWestToSouthOnLeftTurn() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = Direction.WEST;
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .build();
+
+        // when
+        rover.turn(LEFT);
+
+        // then
+        assertThat(rover.getFace()).isEqualTo(Direction.SOUTH);
+    }
+
+    @Test
+    public void shouldChangeFromSouthToEastOnLeftTurn() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = Direction.SOUTH;
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .build();
+
+        // when
+        rover.turn(LEFT);
+
+        // then
+        assertThat(rover.getFace()).isEqualTo(Direction.EAST);
+    }
+
+    @Test
+    public void shouldChangeFromEastToSouthOnRightTurn() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = Direction.EAST;
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .build();
+
+        // when
+        rover.turn(Command.RIGHT);
+
+        // then
+        assertThat(rover.getFace()).isEqualTo(Direction.SOUTH);
+    }
+
+    @Test
+    public void shouldChangeFromSouthToWestOnRightTurn() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = Direction.SOUTH;
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .build();
+
+        // when
+        rover.turn(Command.RIGHT);
+
+        // then
+        assertThat(rover.getFace()).isEqualTo(Direction.WEST);
+    }
+
+    @Test
+    public void shouldChangeFromWestToNorthOnRightTurn() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = Direction.WEST;
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .build();
+
+        // when
+        rover.turn(Command.RIGHT);
+
+        // then
+        assertThat(rover.getFace()).isEqualTo(NORTH);
+    }
+
+    @Test
+    public void shouldChangeFromNorthToEastOnRightTurn() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = NORTH;
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .build();
+
+        // when
+        rover.turn(Command.RIGHT);
+
+        // then
+        assertThat(rover.getFace()).isEqualTo(Direction.EAST);
+    }
+
+    @Test
+    public void shouldNotMoveForwardEastWhenObstacleFound() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = Direction.EAST;
+        // and
+        List<Coordinate> obstacles = Collections.singletonList(Coordinate.instance(location.getX() + 1, location.getY()));
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .obstacles(obstacles)
+                .build();
+
+        // when
+        rover.move(FORWARD);
+
+        // then
+        assertThat(rover.getLocation()).isEqualTo(location);
+    }
+
+    @Test
+    public void shouldNotMoveForwardWestWhenObstacleFound() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = Direction.WEST;
+        // and
+        List<Coordinate> obstacles = Collections.singletonList(Coordinate.instance(location.getX() - 1, location.getY()));
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .obstacles(obstacles)
+                .build();
+
+        // when
+        rover.move(FORWARD);
+
+        // then
+        assertThat(rover.getLocation()).isEqualTo(location);
+    }
+
+    @Test
+    public void shouldNotMoveForwardNorthWhenObstacleFound() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = NORTH;
+        // and
+        List<Coordinate> obstacles = Collections.singletonList(Coordinate.instance(location.getX(), location.getY() + 1));
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .obstacles(obstacles)
+                .build();
+
+        // when
+        rover.move(FORWARD);
+
+        // then
+        assertThat(rover.getLocation()).isEqualTo(location);
+    }
+
+    @Test
+    public void shouldNotMoveForwardSouthWhenObstacleFound() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = Direction.SOUTH;
+        // and
+        List<Coordinate> obstacles = Collections.singletonList(Coordinate.instance(location.getX(), location.getY() - 1));
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .obstacles(obstacles)
+                .build();
+
+        // when
+        rover.move(FORWARD);
+
+        // then
+        assertThat(rover.getLocation()).isEqualTo(location);
+    }
+
+    @Test
+    public void shouldNotMoveBackwardEastWhenObstacleFound() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = Direction.EAST;
+        // and
+        List<Coordinate> obstacles = Collections.singletonList(Coordinate.instance(location.getX() - 1, location.getY()));
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .obstacles(obstacles)
+                .build();
+
+        // when
+        rover.move(Command.BACKWARD);
+
+        // then
+        assertThat(rover.getLocation()).isEqualTo(location);
+    }
+
+    @Test
+    public void shouldNotMoveBackwardWestWhenObstacleFound() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = Direction.WEST;
+        // and
+        List<Coordinate> obstacles = Collections.singletonList(Coordinate.instance(location.getX() + 1, location.getY()));
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .obstacles(obstacles)
+                .build();
+
+        // when
+        rover.move(Command.BACKWARD);
+
+        // then
+        assertThat(rover.getLocation()).isEqualTo(location);
+    }
+
+    @Test
+    public void shouldNotMoveBackwardNorthWhenObstacleFound() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = NORTH;
+        // and
+        List<Coordinate> obstacles = Collections.singletonList(Coordinate.instance(location.getX(), location.getY() - 1));
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .obstacles(obstacles)
+                .build();
+
+        // when
+        rover.move(Command.BACKWARD);
+
+        // then
+        assertThat(rover.getLocation()).isEqualTo(location);
+    }
+
+    @Test
+    public void shouldNotMoveBackwardSouthWhenObstacleFound() {
+        // given
+        Coordinate location = Coordinate.instance(10, 12);
+        // and
+        Direction face = Direction.SOUTH;
+        // and
+        List<Coordinate> obstacles = Collections.singletonList(Coordinate.instance(location.getX(), location.getY() + 1));
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .obstacles(obstacles)
+                .build();
+
+        // when
+        rover.move(Command.BACKWARD);
+
+        // then
+        assertThat(rover.getLocation()).isEqualTo(location);
+    }
+
+    @Test
+    public void shouldTakeCommands() {
+        // given
+        Coordinate location = Coordinate.instance(1, 2);
+        // and
+        Direction face = NORTH;
+        // and
+        Rover rover = new Rover.Builder()
+                .location(location)
+                .face(face)
+                .build();
+
+        // when
+        rover.commands(new Command[]{LEFT, FORWARD, LEFT, FORWARD});
+
+        // then
+        assertThat(rover.getLocation()).isEqualTo(Coordinate.instance(0, 1));
+        // and
+        assertThat(rover.getFace()).isEqualTo(SOUTH);
     }
 }

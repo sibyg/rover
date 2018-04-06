@@ -2,17 +2,17 @@ package com.siby.assignments.db.rover;
 
 import java.util.Objects;
 
-public class CoordinateN {
+public class Coordinate {
     private final int x;
     private final int y;
 
-    private CoordinateN(int x, int y) {
+    private Coordinate(int x, int y) {
         this.x = x;
         this.y = y;
     }
 
-    public static CoordinateN instance(int x, int y) {
-        return new CoordinateN(x, y);
+    public static Coordinate instance(int x, int y) {
+        return new Coordinate(x, y);
     }
 
     public int getX() {
@@ -26,8 +26,8 @@ public class CoordinateN {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof CoordinateN)) return false;
-        CoordinateN that = (CoordinateN) o;
+        if (!(o instanceof Coordinate)) return false;
+        Coordinate that = (Coordinate) o;
         return getX() == that.getX() &&
                 getY() == that.getY();
     }
@@ -39,7 +39,7 @@ public class CoordinateN {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("CoordinateN{");
+        final StringBuilder sb = new StringBuilder("Coordinate{");
         sb.append("x=").append(x);
         sb.append(", y=").append(y);
         sb.append('}');

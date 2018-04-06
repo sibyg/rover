@@ -3,25 +3,15 @@ package com.siby.assignments.db.rover;
 
 public enum Direction {
 
-    NORTH(0, 'N'),
-    EAST(1, 'E'),
-    SOUTH(2, 'S'),
-    WEST(3, 'W');
+    NORTH('N'),
+    EAST('E'),
+    SOUTH('S'),
+    WEST('W');
 
-    private int value;
     private char shortName;
 
-    Direction(int newValue, char shortNameValue) {
-        value = newValue;
+    Direction(char shortNameValue) {
         shortName = shortNameValue;
-    }
-
-    public Direction getBackwardDirection() {
-        return values()[(this.getValue() + 2) % 4];
-    }
-
-    public int getValue() {
-        return value;
     }
 
     public char getShortName() {
